@@ -3,10 +3,40 @@ package library.data;
 import library.model.Transaction;
 import java.util.*;
 
+import library.util.FileManager;
+import java.time.LocalDate;
+
 public class LendingTracker {
     private Queue<Transaction> lendingQueue = new LinkedList<>();
     private Stack<Transaction> returnStack = new Stack<>();
     private List<Transaction> allTransactions = new ArrayList<>();
+    private static final int OVERDUE_DAYS = 14;
+    private static final double FINE_PER_DAY = 1.0;
+    // Returns a list of overdue transactions (status BORROWED and overdue)
+    public List<Transaction> getOverdueTransactions() {
+        List<Transaction> overdue = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+        for (Transaction t : allTransactions) {
+            if ("BORROWED".equals(t.getStatus()) && t.getBorrowDate().plusDays(OVERDUE_DAYS).isBefore(today)) {
+                overdue.add(t);
+            }
+        }
+        return overdue;
+    }
+
+    // Updates fines for all overdue borrowers (requires registry)
+    public void updateOverdueFines(library.data.BorrowerRegistry registry) {
+        LocalDate today = LocalDate.now();
+        for (Transaction t : getOverdueTransactions()) {
+            long daysOverdue = java.time.temporal.ChronoUnit.DAYS.between(t.getBorrowDate().plusDays(OVERDUE_DAYS), today);
+            double fine = daysOverdue * FINE_PER_DAY;
+            library.model.Borrower borrower = registry.getBorrowerById(t.getBorrowerId());
+            if (borrower != null) {
+                borrower.setFinesOwed(borrower.getFinesOwed() + fine);
+                t.setStatus("OVERDUE");
+            }
+        }
+    }
 
     public void borrowBook(Transaction transaction) {
         lendingQueue.add(transaction);
@@ -25,5 +55,39 @@ public class LendingTracker {
 
     public List<Transaction> getAllTransactions() {
         return allTransactions;
+    }
+
+    // --- File Persistence ---
+    public void saveToFile(String filename) throws Exception {
+        List<String> lines = new ArrayList<>();
+        for (Transaction t : allTransactions) {
+            // isbn|borrowerId|borrowDate|returnDate|status
+            lines.add(String.join("|",
+                t.getBookIsbn(),
+                t.getBorrowerId(),
+                t.getBorrowDate().toString(),
+                t.getReturnDate() == null ? "" : t.getReturnDate().toString(),
+                t.getStatus()
+            ));
+        }
+        FileManager.writeLines(filename, lines);
+    }
+
+    public void loadFromFile(String filename) throws Exception {
+        lendingQueue.clear();
+        returnStack.clear();
+        allTransactions.clear();
+        List<String> lines = FileManager.readLines(filename);
+        for (String line : lines) {
+            String[] parts = line.split("\\|");
+            if (parts.length == 5) {
+                LocalDate borrowDate = LocalDate.parse(parts[2]);
+                LocalDate returnDate = parts[3].isEmpty() ? null : LocalDate.parse(parts[3]);
+                Transaction t = new Transaction(parts[0], parts[1], borrowDate, returnDate, parts[4]);
+                allTransactions.add(t);
+                if (t.getStatus().equals("BORROWED")) lendingQueue.add(t);
+                if (t.getStatus().equals("RETURNED")) returnStack.push(t);
+            }
+        }
     }
 }
