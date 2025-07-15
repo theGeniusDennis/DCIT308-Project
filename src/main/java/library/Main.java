@@ -121,27 +121,57 @@ public class Main {
         System.out.println("1. Most Borrowed Books (This Month)");
         System.out.println("2. Borrowers with Highest Fines");
         System.out.println("3. Inventory by Category");
+        System.out.println("4. Most Active Borrowers (All Time)");
+        System.out.println("5. Borrowing Trends (Books Borrowed Per Month)");
+        System.out.println("6. Books Never Borrowed");
         System.out.print("Select report: ");
         String choice = scanner.nextLine();
         switch (choice) {
-            case "1":
+            case "1": {
                 List<library.model.Book> mostBorrowed = library.report.ReportGenerator.mostBorrowedBooks(
                     lendingTracker.getAllTransactions(), bookInventory.listAllBooks(), java.time.LocalDate.now().getMonthValue(), java.time.LocalDate.now().getYear());
                 System.out.println("Most Borrowed Books:");
                 mostBorrowed.forEach(System.out::println);
                 break;
-            case "2":
+            }
+            case "2": {
                 List<library.model.Borrower> topFines = library.report.ReportGenerator.topFines(borrowerRegistry.listAllBorrowers());
                 System.out.println("Borrowers with Highest Fines:");
                 topFines.forEach(System.out::println);
                 break;
-            case "3":
+            }
+            case "3": {
                 java.util.Map<String, Integer> catMap = library.report.ReportGenerator.inventoryByCategory(bookInventory.listAllBooks());
                 System.out.println("Inventory by Category:");
                 for (var entry : catMap.entrySet()) {
                     System.out.println(entry.getKey() + ": " + entry.getValue());
                 }
                 break;
+            }
+            case "4": {
+                List<library.model.Borrower> mostActive = library.report.ReportGenerator.mostActiveBorrowers(
+                    lendingTracker.getAllTransactions(), borrowerRegistry.listAllBorrowers(), 0, 0);
+                System.out.println("Most Active Borrowers (All Time):");
+                for (int i = 0; i < Math.min(10, mostActive.size()); i++) {
+                    System.out.println((i+1) + ". " + mostActive.get(i));
+                }
+                break;
+            }
+            case "5": {
+                java.util.Map<String, Integer> trends = library.report.ReportGenerator.borrowingTrends(lendingTracker.getAllTransactions());
+                System.out.println("Books Borrowed Per Month:");
+                for (var entry : trends.entrySet()) {
+                    System.out.println(entry.getKey() + ": " + entry.getValue());
+                }
+                break;
+            }
+            case "6": {
+                List<library.model.Book> neverBorrowed = library.report.ReportGenerator.booksNeverBorrowed(
+                    bookInventory.listAllBooks(), lendingTracker.getAllTransactions());
+                System.out.println("Books Never Borrowed:");
+                neverBorrowed.forEach(System.out::println);
+                break;
+            }
             default:
                 System.out.println("Invalid report option.");
         }
