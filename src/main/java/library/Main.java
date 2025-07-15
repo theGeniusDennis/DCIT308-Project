@@ -319,14 +319,47 @@ public class Main {
     }
 
     private static void returnBookMenu() {
-        Transaction t = lendingTracker.processNextReturn();
-        if (t != null) {
-            Borrower borrower = borrowerRegistry.getBorrowerById(t.getBorrowerId());
-            if (borrower != null) borrower.removeBorrowedBook(t.getBookIsbn());
-            t.setReturnDate(java.time.LocalDate.now());
-            System.out.println("Book returned: " + t);
-        } else {
-            System.out.println("No books to return.");
+        System.out.print("Enter your Borrower ID: ");
+        String borrowerId = scanner.nextLine().trim();
+        Borrower borrower = borrowerRegistry.getBorrowerById(borrowerId);
+        if (borrower == null) {
+            System.out.println("[Error] Borrower not found. Please check the ID and try again.");
+            return;
         }
+        List<String> borrowedBooks = borrower.getBorrowedBooks();
+        if (borrowedBooks.isEmpty()) {
+            System.out.println("You have no books to return.");
+            return;
+        }
+        System.out.println("Books you have borrowed:");
+        for (String isbn : borrowedBooks) {
+            Book book = bookInventory.getBookByIsbn(isbn);
+            System.out.println("- " + (book != null ? book : isbn));
+        }
+        System.out.print("Enter ISBN of the book to return: ");
+        String isbnToReturn = scanner.nextLine().trim();
+        if (!borrowedBooks.contains(isbnToReturn)) {
+            System.out.println("[Error] You have not borrowed this book.");
+            return;
+        }
+        // Find the corresponding transaction (most recent BORROWED or OVERDUE for this book and borrower)
+        Transaction toReturn = null;
+        List<Transaction> allTx = lendingTracker.getAllTransactions();
+        for (int i = allTx.size() - 1; i >= 0; i--) {
+            Transaction t = allTx.get(i);
+            if (t.getBookIsbn().equals(isbnToReturn) && t.getBorrowerId().equals(borrowerId)
+                && (t.getStatus().equals("BORROWED") || t.getStatus().equals("OVERDUE"))) {
+                toReturn = t;
+                break;
+            }
+        }
+        if (toReturn == null) {
+            System.out.println("[Error] No active transaction found for this book.");
+            return;
+        }
+        toReturn.setStatus("RETURNED");
+        toReturn.setReturnDate(java.time.LocalDate.now());
+        borrower.removeBorrowedBook(isbnToReturn);
+        System.out.println("Book returned: " + (bookInventory.getBookByIsbn(isbnToReturn) != null ? bookInventory.getBookByIsbn(isbnToReturn) : isbnToReturn));
     }
 }
