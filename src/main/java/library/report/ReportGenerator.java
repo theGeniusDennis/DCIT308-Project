@@ -5,7 +5,19 @@ import library.model.Borrower;
 import library.model.Transaction;
 import java.util.*;
 
+/**
+ * ReportGenerator provides static methods for generating library reports.
+ * Includes most borrowed books, top fines, and inventory by category.
+ */
 public class ReportGenerator {
+    /**
+     * Returns a list of the most borrowed books for a given month and year, sorted by borrow count.
+     * @param transactions List of all transactions
+     * @param books List of all books
+     * @param month Month to filter (1-12)
+     * @param year Year to filter
+     * @return List of most borrowed books (most frequent first)
+     */
     public static List<Book> mostBorrowedBooks(List<Transaction> transactions, List<Book> books, int month, int year) {
         Map<String, Integer> borrowCount = new HashMap<>();
         for (Transaction t : transactions) {
@@ -27,12 +39,22 @@ public class ReportGenerator {
         return result;
     }
 
+    /**
+     * Returns a list of borrowers sorted by fines owed (descending).
+     * @param borrowers List of all borrowers
+     * @return List of borrowers with highest fines first
+     */
     public static List<Borrower> topFines(List<Borrower> borrowers) {
         List<Borrower> sorted = new ArrayList<>(borrowers);
         sorted.sort((a, b) -> Double.compare(b.getFinesOwed(), a.getFinesOwed()));
         return sorted;
     }
 
+    /**
+     * Returns a map of book categories to inventory count.
+     * @param books List of all books
+     * @return Map of category name to number of books
+     */
     public static Map<String, Integer> inventoryByCategory(List<Book> books) {
         Map<String, Integer> map = new HashMap<>();
         for (Book b : books) {

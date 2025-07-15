@@ -8,15 +8,27 @@ import library.model.Borrower;
 import library.model.Transaction;
 import java.util.*;
 
+/**
+ * Main class for the Ebenezer Community Library System.
+ * Handles the main menu, user input, and integrates all core features:
+ * book inventory, borrower registry, lending/return, overdue/fines, search/sort, and reporting.
+ * Loads and saves data from/to files for persistence.
+ */
 public class Main {
+    // Scanner for user input
     private static final Scanner scanner = new Scanner(System.in);
+    // Core data managers
     private static final BookInventory bookInventory = new BookInventory();
     private static final BorrowerRegistry borrowerRegistry = new BorrowerRegistry();
     private static final LendingTracker lendingTracker = new LendingTracker();
+    // File paths for persistence
     private static final String BOOKS_FILE = "src/main/resources/books.txt";
     private static final String BORROWERS_FILE = "src/main/resources/borrowers.txt";
     private static final String TRANSACTIONS_FILE = "src/main/resources/transactions.txt";
 
+    /**
+     * Program entry point. Loads data, displays menu, and handles user choices.
+     */
     public static void main(String[] args) {
         System.out.println("Welcome to the Ebenezer Community Library System!");
         // Load books, borrowers, and transactions from file at startup

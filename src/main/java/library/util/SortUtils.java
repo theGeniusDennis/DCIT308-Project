@@ -3,8 +3,15 @@ package library.util;
 import library.model.Book;
 import java.util.List;
 
+/**
+ * SortUtils provides static sorting algorithms for books.
+ * Includes selection sort (by title) and merge sort (by year).
+ */
 public class SortUtils {
-    // Selection sort by title
+    /**
+     * Sorts a list of books in-place by title using selection sort (case-insensitive).
+     * @param books List of books to sort
+     */
     public static void selectionSortByTitle(List<Book> books) {
         int n = books.size();
         for (int i = 0; i < n - 1; i++) {
@@ -20,7 +27,10 @@ public class SortUtils {
         }
     }
 
-    // Merge sort by year
+    /**
+     * Sorts a list of books in-place by year using merge sort.
+     * @param books List of books to sort
+     */
     public static void mergeSortByYear(List<Book> books) {
         if (books.size() > 1) {
             int mid = books.size() / 2;
@@ -32,6 +42,9 @@ public class SortUtils {
         }
     }
 
+    /**
+     * Helper method to merge two sorted lists of books by year.
+     */
     private static void merge(List<Book> books, List<Book> left, List<Book> right) {
         int i = 0, j = 0, k = 0;
         while (i < left.size() && j < right.size()) {
